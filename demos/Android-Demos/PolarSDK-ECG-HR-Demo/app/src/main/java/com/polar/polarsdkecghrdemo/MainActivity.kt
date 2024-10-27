@@ -1,7 +1,6 @@
 package com.polar.polarsdkecghrdemo
 
 import android.Manifest
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.ContentValues
@@ -12,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -45,7 +43,6 @@ import java.util.Locale
 // The main purpose of the app is currently only data collection.
 class MainActivity : AppCompatActivity() {
     companion object {
-        private const val TAG = "Polar_MainActivity"
         private const val PARTICIPANT_NUMBER = 1
         private const val PERMISSION_REQUEST_CODE = 1
         private const val SHARED_LAST_ACTION = "last_action"
@@ -93,18 +90,13 @@ class MainActivity : AppCompatActivity() {
 
     private val bluetoothOnActivityResultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            result: ActivityResult ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    Log.w(TAG, "ActivityResult: Bluetooth was turned on")
-                } else {
-                    Log.w(TAG, "ActivityResult: Bluetooth still turned off")
-                }
+                _: ActivityResult ->
+            // No action needed here.
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.d(TAG, "MainActivity started, version: " + PolarBleApiDefaultImpl.versionInfo())
 
         // getPreferences returns one preferences file without name for only one activity.
         sharedPreferences = getPreferences(MODE_PRIVATE)
@@ -143,7 +135,6 @@ class MainActivity : AppCompatActivity() {
         // Configure Polar API and try to connect device.
         api.setApiCallback(object : PolarBleApiCallback() {
             override fun blePowerStateChanged(powered: Boolean) {
-                Log.d(TAG, "BLE power: $powered")
                 if (powered) {
                     val startText = "You are ready to go, put the sensor on and wait for connection.\n\n" +
                             "If not nothing happens, turn Bluetooth on/off and wait\n" +
@@ -157,7 +148,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun deviceConnected(polarDeviceInfo: PolarDeviceInfo) {
-                Log.d(TAG, "CONNECTED: ${polarDeviceInfo.deviceId}")
                 val connectedText = "Device connected\n\n" +
                         "Last Action: " + sharedPreferences.getString(SHARED_LAST_ACTION, "")
                 welcomeView.text = connectedText
@@ -171,32 +161,14 @@ class MainActivity : AppCompatActivity() {
                 Solution: Thread.sleep(2000) in enableButtons, this is not satisfying but works. */
             }
 
-            override fun deviceConnecting(polarDeviceInfo: PolarDeviceInfo) {
-                Log.d(TAG, "CONNECTING: ${polarDeviceInfo.deviceId}")
-            }
-
             override fun deviceDisconnected(polarDeviceInfo: PolarDeviceInfo) {
-                Log.d(TAG, "DISCONNECTED: ${polarDeviceInfo.deviceId}")
                 disableAllButtonsVisually()
                 val disconnectedText = "Device disconnected."
                 welcomeView.text = disconnectedText
             }
 
-            override fun bleSdkFeatureReady(identifier: String, feature: PolarBleApi.PolarBleSdkFeature) {
-                Log.d(TAG, "Feature ready $feature")
-            }
-
             override fun disInformationReceived(identifier: String, disInfo: DisInfo) {
                 // DIS = Device Information Service
-                if (disInfo.key == "00002a28-0000-1000-8000-00805f9b34fb") {
-                    val value = disInfo.value.trim {it <=' '}
-                    Log.d(TAG, "Firmware of device with id $identifier is $value")
-                }
-            }
-
-            override fun batteryLevelReceived(identifier: String, level: Int) {
-                // Until now it was always 100%, questionable if the returned number is correct.
-                Log.d(TAG, "Battery level of device with id $identifier: $level%")
             }
         })
 
@@ -241,7 +213,6 @@ class MainActivity : AppCompatActivity() {
                             // Save the starting time as unix timestamp into shared preferences.
                             val unixTimestamp = System.currentTimeMillis()
                             sharedPreferences.edit().putLong(SHARED_START_TIME, unixTimestamp).apply()
-                            Log.d(TAG, "Recording started with id: \"$recordIdentifier\"")
 
                             // Save the current action as last action and update welcomeView.
                             val stringDateWithPoints = stringDate.replace("-", ":")
@@ -263,14 +234,12 @@ class MainActivity : AppCompatActivity() {
                             val message = "Possible reasons are, the recording has already started or there is already a saved recording. " +
                                     "The sensor can only have one saved recording at the time.\n\n" +
                                     "Detailed Reason: $error"
-                            Log.e(TAG, "Recording start failed with id \"$recordIdentifier\". Reason: $error")
                             showDialog(title, message)
                         }
                     )
             } else {
                 val title = "Please be patient"
                 val message = "Recording start or stop request is already in progress at the moment."
-                Log.d(TAG, "Recording start or stop request is already in progress at the moment.")
                 showDialog(title, message)
             }
         }
@@ -300,7 +269,6 @@ class MainActivity : AppCompatActivity() {
                             val stringTime = newFormat.format(date)
                             val recordingStopOk = "Recording was stopped at " + stringTime.substring(0, 8) + "."
                             welcomeView.text = recordingStopOk
-                            Log.d(TAG, "Recording stopped at $stringTime.")
                             sharedPreferences.edit().putString(SHARED_LAST_ACTION, recordingStopOk).apply()
                             sharedPreferences.edit().putString(SHARED_END_TIME, stringTime).apply()
 
@@ -315,14 +283,12 @@ class MainActivity : AppCompatActivity() {
                             val message = "Possible reason is that the recording was already stopped.\n\n" +
                                     "In most cases the recording has already stopped, since the sensor was taken off for longer than 30 seconds.\n\n" +
                                     "Detailed Reason: $error"
-                            Log.e(TAG, "Recording stop failed. Reason: $error")
                             showDialog(title, message)
                         }
                     )
             } else {
                 val title = "Please be patient"
                 val message = "Recording start or stop request is already in progress at the moment."
-                Log.d(TAG, "Recording start or stop request is already in progress at the moment.")
                 showDialog(title, message)
             }
         }
@@ -361,21 +327,18 @@ class MainActivity : AppCompatActivity() {
                                 // This state is unreachable and should never happen.
                                 "H10 recording state ERROR, please contact us!"
                             }
-                            Log.d(TAG, recordingStatus)
                             showToast(recordingStatus)
                         },
                         { error: Throwable ->
                             val title = "Recording status read failed"
                             val message = "Possible reasons are, there is no connection to the device or there is already a request in progress.\n\n" +
                                     "Detailed Reason: $error"
-                            Log.e(TAG, "Recording status read failed. Reason: $error")
                             showDialog(title, message)
                         }
                     )
             } else {
                 val title = "Please be patient"
                 val message = "Recording status request is already in progress at the moment."
-                Log.d(TAG, "Recording status request is already in progress at the moment.")
                 showDialog(title, message)
             }
         }
@@ -398,7 +361,6 @@ class MainActivity : AppCompatActivity() {
                             val workingText = "Processing..."
                             saveRecordingButton.text = workingText
 
-                            Log.d(TAG, "Fetching of recording with id: ${recordingEntries.first().identifier}.")
                             saveExerciseDisposable = api.fetchExercise(deviceId, recordingEntries.first())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .doFinally {
@@ -426,7 +388,6 @@ class MainActivity : AppCompatActivity() {
                                             recordingEntries.first().identifier + "--" + endTime?.replace(":", "-")
                                         } else {
                                             // For the future the last 30 seconds could be deleted if the sensor was taken off.
-                                            Log.d(TAG, "End time not found and last result appended to id.")
                                             val calculatedEndTime = Date(unixTimestamp)
                                             val newFormat = SimpleDateFormat("HH-mm-ss-SSS", Locale.GERMANY)
                                             val stringDate = newFormat.format(calculatedEndTime)
@@ -434,7 +395,6 @@ class MainActivity : AppCompatActivity() {
                                         }
                                         Thread {
                                             saveRecordingToExternalStorage(id, recording, timestamps)
-                                            Log.d(TAG, "Recording with id: ${recordingEntries.first().identifier} saved.")
                                         }.start()
 
                                         // Save the button status afterwards
@@ -457,7 +417,6 @@ class MainActivity : AppCompatActivity() {
                                         val message = "Possible reasons are, there was no recording on the device found or you cleared the app data.\n\n" +
                                                     "Note: Use this button only after hitting stop recording or if you have accidentally taken off the sensor!\n\n" +
                                                     "Detailed Reason: $error"
-                                        Log.e(TAG, "Failed to read recording. Reason: $error")
                                         showDialog(title, message)
                                     }
                                 )
@@ -470,7 +429,6 @@ class MainActivity : AppCompatActivity() {
             } else {
                 val title = "Please be patient"
                 val message = "Fetching of a recoding is already in progress at the moment."
-                Log.d(TAG, "Fetching of a recoding is in progress at the moment.")
                 showDialog(title, message)
             }
         }
@@ -519,20 +477,17 @@ class MainActivity : AppCompatActivity() {
                             // Clear recording data.
                             recordingEntries.clear()
                             sharedPreferences.edit().remove(SHARED_RECORDING_ID).apply()
-                            Log.d(TAG, "Recording with id: ${recordingEntry.identifier} successfully removed.")
                         },
                         { error: Throwable ->
                             val title = "Removal of recording failed"
                             val message = "Possible reasons are, the recording was already deleted or an internal bug appeared, please contact us.\n\n" +
                                     "Detailed Reason: $error"
-                            Log.e(TAG, "Removal of recording: ${recordingEntry.identifier} failed. Reason: $error")
                             showDialog(title, message)
                         }
                     )
             } else {
                 val title = "Please be patient"
                 val message = "Removing of a recording is already in progress."
-                Log.d(TAG, "Removing of a recording is already in progress.")
                 showDialog(title, message)
             }
         }
@@ -567,12 +522,10 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_REQUEST_CODE) {
             for (index in 0..grantResults.lastIndex) {
                 if (grantResults[index] == PackageManager.PERMISSION_DENIED) {
-                    Log.w(TAG, "Needed permissions are missing")
                     showToast("Needed permissions are missing")
                     return
                 }
             }
-            Log.d(TAG, "Needed permissions are granted")
         }
     }
 
@@ -666,7 +619,6 @@ class MainActivity : AppCompatActivity() {
             val titleError = "An error occurred"
             val messageError = "Sorry, it seems like you cannot save or remove the recording, since you probably cleared the data of the app.\n\n" +
                     "Please inform us."
-            Log.e(TAG, "Removing or saving of the recording failed. Reason: No recording found or data lost.")
             showDialog(titleError, messageError)
             return false
         }
@@ -695,6 +647,7 @@ class MainActivity : AppCompatActivity() {
             )
             FileOutputStream(file)
         }
+        // Output stream should not be null
         if (outputStream != null) {
             try {
                 val recordingIterator = recording.listIterator()
@@ -705,14 +658,9 @@ class MainActivity : AppCompatActivity() {
                     p.println(recordingIterator.next().toString() + "," +  timestampIterator.next().toString())
                 }
                 p.close()
-                Log.d(TAG, "File written.")
             } catch (e: IOException) {
                 e.printStackTrace()
-                Log.e(TAG, "Error while writing to file or permission denied.")
             }
-        } else {
-            // This case should not be reached.
-            Log.e(TAG, "Output stream is null.")
         }
     }
 
