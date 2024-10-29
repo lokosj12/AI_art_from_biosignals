@@ -185,6 +185,7 @@ class MainActivity : AppCompatActivity() {
 
                 // Deactivate the buttons to prevent multiple requests and change the button text.
                 disableAllButtons()
+                toggleButtonProcess(startRecordingButton)
                 val workingText = "Processing..."
                 startRecordingButton.text = workingText
 
@@ -249,6 +250,7 @@ class MainActivity : AppCompatActivity() {
             if (isDisposed) {
                 // Deactivate the buttons to prevent multiple requests and change the button text.
                 disableAllButtons()
+                toggleButtonProcess(stopRecordingButton)
                 val workingText = "Processing..."
                 stopRecordingButton.text = workingText
 
@@ -298,6 +300,7 @@ class MainActivity : AppCompatActivity() {
             if (isDisposed) {
                 // Deactivate the buttons to prevent multiple requests and change the button text.
                 disableAllButtons()
+                toggleButtonProcess(checkRecordingStatusButton)
                 val workingText = "Processing..."
                 checkRecordingStatusButton.text = workingText
 
@@ -358,6 +361,7 @@ class MainActivity : AppCompatActivity() {
                         if (getRecordingPath()) {
                             // Deactivate the buttons to prevent multiple requests and change the button text.
                             disableAllButtons()
+                            toggleButtonProcess(saveRecordingButton)
                             val workingText = "Processing..."
                             saveRecordingButton.text = workingText
 
@@ -438,6 +442,7 @@ class MainActivity : AppCompatActivity() {
             if (isDisposed) {
                 // Deactivate the buttons to prevent multiple requests and change the button text.
                 disableAllButtons()
+                toggleButtonProcess(removeRecordingButton)
                 val workingText = "Processing..."
                 removeRecordingButton.text = workingText
 
@@ -600,6 +605,13 @@ class MainActivity : AppCompatActivity() {
         } else {
             DrawableCompat.setTint(buttonDrawable, resources.getColor(R.color.colorPrimary, null))
         }
+        button.background = buttonDrawable
+    }
+
+    private fun toggleButtonProcess(button: Button) {
+        var buttonDrawable = button.background
+        buttonDrawable = DrawableCompat.wrap(buttonDrawable!!)
+        DrawableCompat.setTint(buttonDrawable, resources.getColor(R.color.colorSecondary, null))
         button.background = buttonDrawable
     }
 
