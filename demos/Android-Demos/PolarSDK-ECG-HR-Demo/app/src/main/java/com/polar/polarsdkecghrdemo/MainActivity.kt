@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity() {
                 // Get the start time of the recording and construct the recording id.
                 val calendar = Calendar.getInstance()
                 val date = calendar.time
-                val newFormat = SimpleDateFormat("dd-MM-yyyy'T'HH-mm-ss-SSS", Locale.GERMANY)
+                val newFormat = SimpleDateFormat("dd-MM-yyyy'T'HH-mm-ss", Locale.GERMANY)
                 val stringDate = newFormat.format(date)
                 val recordIdentifier = "P$PARTICIPANT_NUMBER-$stringDate"
 
@@ -265,7 +265,7 @@ class MainActivity : AppCompatActivity() {
                             // Save the current action as last action, update welcomeView and save end time.
                             val calendar = Calendar.getInstance()
                             val date = calendar.time
-                            val newFormat = SimpleDateFormat("HH:mm:ss:SSS", Locale.GERMANY)
+                            val newFormat = SimpleDateFormat("HH:mm:ss", Locale.GERMANY)
                             val stringTime = newFormat.format(date)
                             val recordingStopOk = "Recording was stopped at " + stringTime.substring(0, 8) + "."
                             welcomeView.text = recordingStopOk
@@ -389,7 +389,7 @@ class MainActivity : AppCompatActivity() {
                                         } else {
                                             // For the future the last 30 seconds could be deleted if the sensor was taken off.
                                             val calculatedEndTime = Date(unixTimestamp)
-                                            val newFormat = SimpleDateFormat("HH-mm-ss-SSS", Locale.GERMANY)
+                                            val newFormat = SimpleDateFormat("HH-mm-ss", Locale.GERMANY)
                                             val stringDate = newFormat.format(calculatedEndTime)
                                             recordingEntries.first().identifier + "--" + stringDate
                                         }
