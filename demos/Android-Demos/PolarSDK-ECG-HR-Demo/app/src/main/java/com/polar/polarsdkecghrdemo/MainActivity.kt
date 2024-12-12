@@ -653,7 +653,7 @@ class MainActivity : AppCompatActivity() {
                 val recordingIterator = recording.listIterator()
                 val timestampIterator = timestamps.listIterator()
                 val p = PrintWriter(outputStream)
-                p.println("RR-Intervals,Timestamps (End Time)")
+                p.println("RR-Intervals,Timestamps")
                 while(recordingIterator.hasNext()){
                     p.println(recordingIterator.next().toString() + "," +  timestampIterator.next().toString())
                 }
